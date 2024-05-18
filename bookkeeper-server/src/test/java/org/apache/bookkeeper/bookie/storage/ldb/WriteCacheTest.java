@@ -1,6 +1,7 @@
+package org.apache.bookkeeper.bookie.storage.ldb;
+
 import static org.junit.Assert.assertTrue;
 
-import org.apache.bookkeeper.bookie.storage.ldb.WriteCache;
 import org.junit.Test;
 import io.netty.buffer.ByteBufAllocator;
 
