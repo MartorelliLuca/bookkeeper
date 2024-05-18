@@ -222,13 +222,7 @@
   <!-- dependency definitions -->
   <dependencyManagement>
     <dependencies>
-      <!-- https://mvnrepository.com/artifact/br.usp.each.saeg/ba-dua -->
-      <dependency>
-        <groupId>br.usp.each.saeg</groupId>
-        <artifactId>ba-dua</artifactId>
-        <version>0.8.0</version>
-        <type>pom</type>
-      </dependency>
+
       <!-- provided dependencies -->
       <dependency>
         <groupId>com.github.spotbugs</groupId>
@@ -1347,10 +1341,10 @@
     <profile>
       <id>JaCoCo-coverage</id>
       <activation>
-        <activeByDefault>true</activeByDefault>
-        <property>
+        <activeByDefault>false</activeByDefault>
+        <!--<property>
           <name>!skipCoverage</name>
-        </property>
+        </property>-->
       </activation>
       <!--<build>
         <plugins>
