@@ -366,6 +366,9 @@
         </plugins>
       </build>
     </profile>
+
+
+
     <!-- Badua profile -->
     <profile>
       <id>BaDua</id>
@@ -430,7 +433,7 @@
                 <goals>
                   <goal>java</goal>
                 </goals>
-                <phase>test</phase>
+                <phase>verify</phase>
                 <configuration>
                   <mainClass>br.usp.each.saeg.badua.cli.Report</mainClass>
                   <arguments>
