@@ -34,7 +34,9 @@ jobs:
       - name: Build and analyze bookkeeper project
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: mvn clean verify -P BaDua
+        run: |
+          cd bookkeeper-server
+          mvn clean verify -P BaDua
       - name: Upload report
         uses: actions/upload-artifact@v3
         with:

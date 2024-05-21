@@ -34,7 +34,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn -B verify -P JaCoCo-coverage
+        run: |
+          cd bookkeeper-server
+          mvn clean verify -P JaCoCo-coverage
       - name: Upload report
         uses: actions/upload-artifact@v3
         with:
