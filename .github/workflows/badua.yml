@@ -18,12 +18,7 @@ jobs:
         with:
           java-version: 8.0.372
           distribution: 'temurin' # Alternative distribution options are available.
-      - name: Cache Maven packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
+          
       - name: Clone and build ba-dua repository
         run: |
           git clone https://github.com/saeg/ba-dua
@@ -34,7 +29,7 @@ jobs:
       - name: Build and analyze bookkeeper project
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
-        run: rm -rf ~/.m2/repository/org/apache/bookkeeper
+        run:
             mvn clean verify -P BaDua -pl bookkeeper-server
 
       - name: Upload report
