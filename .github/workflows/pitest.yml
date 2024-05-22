@@ -2,7 +2,7 @@ name: PitMutationTesting
 on:
   push:
     branches:
-      - 3.2.x-Reduced_And_No_Test_Version
+      - master
   pull_request:
     types: [opened, synchronize, reopened]
 jobs:
