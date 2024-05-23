@@ -1,48 +1,33 @@
-[INFO] Scanning for projects...
-[INFO] ------------------------------------------------------------------------
-[INFO] Detecting the operating system and CPU architecture
-[INFO] ------------------------------------------------------------------------
-[INFO] os.detected.name: linux
-[INFO] os.detected.arch: x86_64
-[INFO] os.detected.release: ubuntu
-[INFO] os.detected.release.version: 22.04
-[INFO] os.detected.release.like.ubuntu: true
-[INFO] os.detected.release.like.debian: true
-[INFO] os.detected.classifier: linux-x86_64
-[INFO] ------------------------------------------------------------------------
-[INFO] Reactor Build Order:
-[INFO] 
-[INFO] Apache BookKeeper :: Parent                                        [pom]
-[INFO] Apache BookKeeper :: Native IO Library                             [nar]
-[INFO] Apache BookKeeper :: Test Tools                                    [jar]
-[INFO] Apache BookKeeper :: Circe Checksum Library                        [nar]
-[INFO] Apache BookKeeper :: Server                                        [jar]
-[INFO] Apache BookKeeper :: Build Tools                                   [jar]
-[INFO] JaCoCo Test Coverage                                               [jar]
-[INFO] 
-[INFO] ------------------< org.apache.bookkeeper:bookkeeper >------------------
-[INFO] Building Apache BookKeeper :: Parent 4.18.0-SNAPSHOT               [1/7]
-[INFO] --------------------------------[ pom ]---------------------------------
-[INFO] ------------------------------------------------------------------------
-[INFO] Reactor Summary for Apache BookKeeper :: Parent 4.18.0-SNAPSHOT:
-[INFO] 
-[INFO] Apache BookKeeper :: Parent ........................ FAILURE [  0.052 s]
-[INFO] Apache BookKeeper :: Native IO Library ............. SKIPPED
-[INFO] Apache BookKeeper :: Test Tools .................... SKIPPED
-[INFO] Apache BookKeeper :: Circe Checksum Library ........ SKIPPED
-[INFO] Apache BookKeeper :: Server ........................ SKIPPED
-[INFO] Apache BookKeeper :: Build Tools ................... SKIPPED
-[INFO] JaCoCo Test Coverage ............................... SKIPPED
-[INFO] ------------------------------------------------------------------------
-[INFO] BUILD FAILURE
-[INFO] ------------------------------------------------------------------------
-[INFO] Total time:  0.844 s
-[INFO] Finished at: 2024-05-21T16:00:59+02:00
-[INFO] ------------------------------------------------------------------------
-[ERROR] Unknown lifecycle phase "bookkeeper-server". You must specify a valid lifecycle phase or a goal in the format <plugin-prefix>:<goal> or <plugin-group-id>:<plugin-artifact-id>[:<plugin-version>]:<goal>. Available lifecycle phases are: validate, initialize, generate-sources, process-sources, generate-resources, process-resources, compile, process-classes, generate-test-sources, process-test-sources, generate-test-resources, process-test-resources, test-compile, process-test-classes, test, prepare-package, package, pre-integration-test, integration-test, post-integration-test, verify, install, deploy, pre-clean, clean, post-clean, pre-site, site, post-site, site-deploy. -> [Help 1]
-[ERROR] 
-[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
-[ERROR] Re-run Maven using the -X switch to enable full debug logging.
-[ERROR] 
-[ERROR] For more information about the errors and possible solutions, please read the following articles:
-[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/LifecyclePhaseNotFoundException
+Un file journal contiene i log delle transazioni di BookKeeper. Prima di effettuare qualsiasi aggiornamento, un bookie
+(server di storage che gestisce dei ledgers, ovvero una sequenza di entries dove ogni entry è una sequenza di bytes
+scritti in maniera sequenziale con politica append-only e at most once) si assicura che una transazione che descrive
+l'aggiornamento sia scritta sulla memoria non-volatile. Un nuovo file di journal viene creato all'avvio del bookie o quando il
+file di journal più vecchio raggiunge la soglia di dimensione del file di journal.
+JournalScanningJournalTest -
+
+
+
+Nel contesto della classe Journal il primo metodo individuato è il seguente:
+public long scanJournal(long journalId, long journalPos, JournalScanner scanner)
+Questo metodo offre alla classe Journal la possibilità di eseguire una scansione di un journal (identificato tramite
+journalId) a partire da una specifica posizione (indicata tramite journalPos) utilizzando un oggetto scanner.
+Iniziamo con l’analisi dei singoli parametri:
+● long journalId: identificativo del log del journal
+● long journalPos: posizione da cui iniziare la scansione
+● JournalScanner scanner: oggetto scanner per la gestione delle entries del journal
+Dalla dichiarazione del metodo sappiamo anche che il valore di ritorno è long scanOffset e corrisponde all’offset del byte
+fino al quale il journal è stato letto.
+
+
+Con un approccio prettamente black box le classi di equivalenza individuate per i primi due parametri sarebbero {<0},
+{>=0}. Tuttavia, quando un journal viene creato, ad esso viene ragionevolmente associato un certo journalId: dalle prime
+prove eseguite nei test ho verificato che a meno che tale parametro non corrisponda al vero journalId il flow di
+esecuzione risulta costante e relegato ad un solo outcome.
+Per quanto appena detto quindi le classi di equivalenza scelte sono le seguenti:
+● long journalId: {correctJournalId}, {incorrectJournalId}
+● long journalPos: {<0}, {>=0}
+● JournalScanner scanner: {null}, {valid_instance}, {invalid_instance}
+Dove il correctJournalId è preso attraverso la chiamata a:
+Journal.listJournalIds(this.journal.getJournalDirectory(), null).get(0);
+Per quanto riguarda le istanze di scanner si è preso spunto dalla test suite originale presente in bookkeeper (di cui si
+sono mantenute anche alcune classi e/o metodi per gestire la configurazione
