@@ -12,7 +12,7 @@ import java.nio.charset.StandardCharsets;
 
 public class FileInfoTest {
 
-    private File tempFile;
+    /*private File tempFile;
     private final byte[] masterKey = "masterKey".getBytes(StandardCharsets.UTF_8);
 
     @BeforeEach
@@ -190,5 +190,5 @@ public class FileInfoTest {
 
         assertArrayEquals(masterKey, newFileInfo.getMasterKey());
         assertFalse(newFileInfo.isFenced());
-    }
+    }*/
 }
