@@ -1,6 +1,8 @@
 package org.apache.bookkeeper.bookie.storage.ldb.util;
 
-import io.netty.buffer.*;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufAllocator;
+import io.netty.buffer.Unpooled;
 import io.netty.util.ByteProcessor;
 
 import java.io.IOException;
@@ -13,7 +15,7 @@ import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
 import java.nio.charset.Charset;
 
-public class InvalidByteBuf extends ByteBuf {
+public class ExceedByteBuf extends ByteBuf {
 
     private final byte[] bytes = "INVALID".getBytes();
 
@@ -21,7 +23,7 @@ public class InvalidByteBuf extends ByteBuf {
      * Hardcoded a greater number compared to the effective bytes size*/
     @Override
     public int readableBytes() {
-        return -76525;
+        return 2140000000;
     }
 
     @Override
