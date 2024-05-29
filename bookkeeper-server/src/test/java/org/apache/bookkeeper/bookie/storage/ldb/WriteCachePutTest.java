@@ -36,8 +36,8 @@ public class WriteCachePutTest {
     @Parameterized.Parameters
     public static Collection<?> getParameters() {
         return Arrays.asList(new Object[][] {
-       // ledgerID, entryID, entryType, exception
-                // test added with jacoco
+                // ledgerID, entryID, entryType, exception
+                // test added after Data Coverage and Flow Coverage report
                 {0,   0, ByteBufType.EXCEED,  true},
                 {0,  -1, ByteBufType.EXCEED,  true},
                 {-1,  0, ByteBufType.EXCEED,  true},
@@ -58,9 +58,7 @@ public class WriteCachePutTest {
                 {-1, -1, ByteBufType.EMPTY,   true},
                 {-1,  0, ByteBufType.EMPTY,   true},
                 {0,   0, ByteBufType.EMPTY,   false},
-                {0,  -1, ByteBufType.EMPTY,   true}
-
-
+                {0,  -1, ByteBufType.EMPTY,   true},
         });
     }
 
@@ -92,10 +90,10 @@ public class WriteCachePutTest {
                 this.entry = byteBufAllocator.buffer(entrySize);
                 break;
             case INVALID:
-                this.entry= this.invalidByteBuf;
+                this.entry = this.invalidByteBuf;
                 break;
             case EXCEED:
-                this.entry=this.exceedByteBuf;
+                this.entry = this.exceedByteBuf;
                 break;
         }
     }

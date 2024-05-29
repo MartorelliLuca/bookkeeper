@@ -47,8 +47,8 @@ import org.slf4j.LoggerFactory;
 public class BookieInfoReader {
     private static final Logger LOG = LoggerFactory.getLogger(BookieInfoReader.class);
     private static final long GET_BOOKIE_INFO_REQUEST_FLAGS =
-        BookkeeperProtocol.GetBookieInfoRequest.Flags.TOTAL_DISK_CAPACITY_VALUE
-                               | BookkeeperProtocol.GetBookieInfoRequest.Flags.FREE_DISK_SPACE_VALUE;
+            BookkeeperProtocol.GetBookieInfoRequest.Flags.TOTAL_DISK_CAPACITY_VALUE
+                    | BookkeeperProtocol.GetBookieInfoRequest.Flags.FREE_DISK_SPACE_VALUE;
 
     private final ScheduledExecutorService scheduler;
     private final BookKeeper bk;
@@ -235,9 +235,9 @@ public class BookieInfoReader {
 
     public void start() {
         this.bk
-            .getMetadataClientDriver()
-            .getRegistrationClient()
-            .watchWritableBookies(bookies -> availableBookiesChanged(bookies.getValue()));
+                .getMetadataClientDriver()
+                .getRegistrationClient()
+                .watchWritableBookies(bookies -> availableBookiesChanged(bookies.getValue()));
         scheduler.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
@@ -250,7 +250,7 @@ public class BookieInfoReader {
                         bookieInfoMap.updateBookies(updatedBookies);
                     } catch (BKException e) {
                         LOG.info("Got exception while querying bookies from watcher, rerunning after {}s",
-                                 conf.getGetBookieInfoRetryIntervalSeconds(), e);
+                                conf.getGetBookieInfoRetryIntervalSeconds(), e);
                         scheduler.schedule(this, conf.getGetBookieInfoRetryIntervalSeconds(), TimeUnit.SECONDS);
                         return;
                     }
@@ -327,7 +327,7 @@ public class BookieInfoReader {
 
         BookieClient bkc = bk.getBookieClient();
         final long requested = BookkeeperProtocol.GetBookieInfoRequest.Flags.TOTAL_DISK_CAPACITY_VALUE
-                               | BookkeeperProtocol.GetBookieInfoRequest.Flags.FREE_DISK_SPACE_VALUE;
+                | BookkeeperProtocol.GetBookieInfoRequest.Flags.FREE_DISK_SPACE_VALUE;
         totalSent = 0;
         completedCnt = 0;
         errorCnt = 0;
@@ -365,12 +365,12 @@ public class BookieInfoReader {
                         @Override
                         public void getBookieInfoComplete(final int rc, final BookieInfo bInfo, final Object ctx) {
                             scheduler.submit(
-                                new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        processReadInfoComplete(rc, bInfo, ctx);
-                                    }
-                                });
+                                    new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            processReadInfoComplete(rc, bInfo, ctx);
+                                        }
+                                    });
                         }
                     }, b);
             totalSent++;
@@ -401,10 +401,10 @@ public class BookieInfoReader {
         final AtomicInteger totalSent = new AtomicInteger();
         final AtomicInteger totalCompleted = new AtomicInteger();
         final ConcurrentMap<BookieId, BookieInfo> map =
-            new ConcurrentHashMap<BookieId, BookieInfo>();
+                new ConcurrentHashMap<BookieId, BookieInfo>();
         final CountDownLatch latch = new CountDownLatch(1);
         long requested = BookkeeperProtocol.GetBookieInfoRequest.Flags.TOTAL_DISK_CAPACITY_VALUE
-                         | BookkeeperProtocol.GetBookieInfoRequest.Flags.FREE_DISK_SPACE_VALUE;
+                | BookkeeperProtocol.GetBookieInfoRequest.Flags.FREE_DISK_SPACE_VALUE;
 
         Collection<BookieId> bookies;
         bookies = bk.bookieWatcher.getBookies();
@@ -415,25 +415,25 @@ public class BookieInfoReader {
         totalSent.set(bookies.size());
         for (BookieId b : bookies) {
             bkc.getBookieInfo(b, requested, new GetBookieInfoCallback() {
-                        @Override
-                        public void getBookieInfoComplete(int rc, BookieInfo bInfo, Object ctx) {
-                            BookieId b = (BookieId) ctx;
-                            if (rc != BKException.Code.OK) {
-                                if (LOG.isErrorEnabled()) {
-                                    LOG.error("Reading bookie info from bookie {} failed due to {}",
-                                            b, BKException.codeLogger(rc));
-                                }
-                            } else {
-                                if (LOG.isDebugEnabled()) {
-                                    LOG.debug("Free disk space on bookie {} is {}.", b, bInfo.getFreeDiskSpace());
-                                }
-                                map.put(b, bInfo);
-                            }
-                            if (totalCompleted.incrementAndGet() == totalSent.get()) {
-                                latch.countDown();
-                            }
+                @Override
+                public void getBookieInfoComplete(int rc, BookieInfo bInfo, Object ctx) {
+                    BookieId b = (BookieId) ctx;
+                    if (rc != BKException.Code.OK) {
+                        if (LOG.isErrorEnabled()) {
+                            LOG.error("Reading bookie info from bookie {} failed due to {}",
+                                    b, BKException.codeLogger(rc));
                         }
-                    }, b);
+                    } else {
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("Free disk space on bookie {} is {}.", b, bInfo.getFreeDiskSpace());
+                        }
+                        map.put(b, bInfo);
+                    }
+                    if (totalCompleted.incrementAndGet() == totalSent.get()) {
+                        latch.countDown();
+                    }
+                }
+            }, b);
         }
         try {
             latch.await();

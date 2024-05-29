@@ -23,7 +23,7 @@ public class ExceedByteBuf extends ByteBuf {
      * Hardcoded a greater number compared to the effective bytes size*/
     @Override
     public int readableBytes() {
-        return 2140000000;
+        return 10240;
     }
 
     @Override
