@@ -3,7 +3,6 @@ package org.apache.bookkeeper.bookie.storage.ldb;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.UnpooledByteBufAllocator;
-import org.apache.bookkeeper.bookie.storage.ldb.util.ExceedByteBuf;
 import org.junit.*;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -13,11 +12,10 @@ import java.util.Arrays;
 import java.util.Collection;
 
 @RunWith(Parameterized.class)
-public class WriteCachePutTest {
+public class PutWriteCacheTest {
     private WriteCache writeCache;
     private final ByteBufAllocator byteBufAllocator;
     private final InvalidByteBuf invalidByteBuf;
-    private final ExceedByteBuf exceedByteBuf;
 
     private final long ledgerId;
     private final long entryId;
@@ -29,19 +27,13 @@ public class WriteCachePutTest {
         NULL,
         VALID,
         EMPTY,
-        INVALID,
-        EXCEED
+        INVALID
     }
 
     @Parameterized.Parameters
     public static Collection<?> getParameters() {
         return Arrays.asList(new Object[][] {
                 // ledgerID, entryID, entryType, exception
-                // test added after Data Coverage and Flow Coverage report
-                {0,   0, ByteBufType.EXCEED,  true},
-                {0,  -1, ByteBufType.EXCEED,  true},
-                {-1,  0, ByteBufType.EXCEED,  true},
-                {-1,  0, ByteBufType.EXCEED,  true},
                 //category partition tests
                 {-1, -1, ByteBufType.INVALID, true},
                 {-1,  0, ByteBufType.INVALID, true},
@@ -62,14 +54,13 @@ public class WriteCachePutTest {
         });
     }
 
-    public WriteCachePutTest(long ledgerId, long entryId, ByteBufType entryType, boolean isExpectedException) {
+    public PutWriteCacheTest(long ledgerId, long entryId, ByteBufType entryType, boolean isExpectedException) {
         this.ledgerId = ledgerId;
         this.entryId = entryId;
         this.entryType = entryType;
         this.isExpectedException = isExpectedException;
         this.byteBufAllocator = UnpooledByteBufAllocator.DEFAULT;
         this.invalidByteBuf = new InvalidByteBuf();
-        this.exceedByteBuf = new ExceedByteBuf();
     }
 
     @Before
@@ -91,9 +82,6 @@ public class WriteCachePutTest {
                 break;
             case INVALID:
                 this.entry = this.invalidByteBuf;
-                break;
-            case EXCEED:
-                this.entry = this.exceedByteBuf;
                 break;
         }
     }

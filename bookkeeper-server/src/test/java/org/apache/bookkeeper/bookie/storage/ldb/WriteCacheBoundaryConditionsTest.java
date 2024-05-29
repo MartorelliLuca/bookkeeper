@@ -15,7 +15,7 @@ public class WriteCacheBoundaryConditionsTest {
 
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         int number = 2;
         this.size = 64;
         writeCache = new WriteCache(byteBufAllocator, size * number);

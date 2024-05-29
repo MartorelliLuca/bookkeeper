@@ -1,4 +1,3 @@
-/*
 package org.apache.bookkeeper.bookie.storage.ldb;
 
 import io.netty.buffer.ByteBuf;
@@ -16,7 +15,7 @@ import java.util.Collection;
 
 
 @RunWith(Parameterized.class)
-public class WriteCacheGetTest {
+public class GetWriteCacheTest {
 
     private WriteCache writeCache;
     private ByteBufAllocator byteBufAllocator;
@@ -58,7 +57,7 @@ public class WriteCacheGetTest {
         });
     }
 
-    public WriteCacheGetTest(boolean isValidLedgerId, boolean isValidEntryId , boolean isExceptionExpected){
+    public GetWriteCacheTest(boolean isValidLedgerId, boolean isValidEntryId , boolean isExceptionExpected){
         this.isValidLedgerId = isValidLedgerId;
         this.isValidEntryId = isValidEntryId;
         this.isExceptionExpected = isExceptionExpected;
@@ -89,4 +88,3 @@ public class WriteCacheGetTest {
         }
     }
 }
-*/
