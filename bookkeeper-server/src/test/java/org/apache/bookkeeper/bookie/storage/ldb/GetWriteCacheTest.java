@@ -13,7 +13,6 @@ import org.junit.runners.Parameterized;
 import java.util.Arrays;
 import java.util.Collection;
 
-
 @RunWith(Parameterized.class)
 public class GetWriteCacheTest {
 
@@ -26,9 +25,25 @@ public class GetWriteCacheTest {
     private final boolean isValidEntryId;
     private final boolean isExceptionExpected;
 
+    @Parameterized.Parameters
+    public static Collection<Object[]> parameters() {
+        return Arrays.asList(new Object[][] {
+          // isValidLedgerId,       isValidEntryId,    isExceptionExpected
+                { true,                 true,               false },
+                { true,                 false,              true },
+                { false,                true,               true },
+                { false,                false,              true }
+        });
+    }
+
+    public GetWriteCacheTest(boolean isValidLedgerId, boolean isValidEntryId, boolean isExceptionExpected) {
+        this.isValidLedgerId = isValidLedgerId;
+        this.isValidEntryId = isValidEntryId;
+        this.isExceptionExpected = isExceptionExpected;
+    }
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         byteBufAllocator = ByteBufAllocator.DEFAULT;
         int entryNumber = 10;
         int entrySize = 1024;
@@ -39,52 +54,26 @@ public class GetWriteCacheTest {
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         writeCache.clear();
         entry.release();
         writeCache.close();
     }
 
-    // Input parameters
-    @Parameterized.Parameters
-    public static Collection<?> getParameters(){
-        return Arrays.asList(new Object[][] {
-                // isValidLedgerId, isValidEntryId, isExceptionExpected
-                {  true,        true,           false},
-                {  true,        false,          true},
-                {  false,       true,           true},
-                {  false,       false,          true}
-        });
-    }
-
-    public GetWriteCacheTest(boolean isValidLedgerId, boolean isValidEntryId , boolean isExceptionExpected){
-        this.isValidLedgerId = isValidLedgerId;
-        this.isValidEntryId = isValidEntryId;
-        this.isExceptionExpected = isExceptionExpected;
-    }
-
     @Test
-    public void getFromCacheTest(){
-
-        ByteBuf result = null;
-
-        long actualLedgerId = this.isValidLedgerId ? ledgerId : ledgerId + 1;
-        long actualEntryId = this.isValidEntryId ? entryId : entryId + 1;
+    public void testGetFromCache() {
+        long testLedgerId = isValidLedgerId ? ledgerId : ledgerId + 1;
+        long testEntryId = isValidEntryId ? entryId : entryId + 1;
 
         try {
-            System.out.println("Valid Ledger ID: " + this.ledgerId  + "\t|\t Actual Ledger ID: " + actualLedgerId);
-            System.out.println("Valid Entry ID:  " + this.entryId  + "\t|\t Actual Entry ID:  " + actualEntryId);
-            System.out.println("----------------------------------------");
-            result = writeCache.get(actualLedgerId, actualEntryId);
-        } catch(Exception e) {
-            e.printStackTrace();
-            Assert.assertTrue("Caught exception", this.isExceptionExpected);
-        }
-
-        if (!this.isExceptionExpected) {
-            Assert.assertEquals(result, entry);
-        } else {
-            Assert.assertNull(result);
+            ByteBuf result = writeCache.get(testLedgerId, testEntryId);
+            if (isExceptionExpected) {
+                Assert.assertNull(result);
+            } else {
+                Assert.assertEquals(entry, result);
+            }
+        } catch (Exception e) {
+            Assert.assertTrue("Exception was expected", isExceptionExpected);
         }
     }
 }

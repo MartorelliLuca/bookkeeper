@@ -17,8 +17,9 @@ public class InvalidByteBuf extends ByteBuf {
 
     private final byte[] bytes = "INVALID".getBytes();
 
-    /** This is used by put to know how much are readable bytes. <br />
+/** This is used by put to know how much are readable bytes. <br />
      * Hardcoded a greater number compared to the effective bytes size*/
+
     @Override
     public int readableBytes() {
         return -76525;
