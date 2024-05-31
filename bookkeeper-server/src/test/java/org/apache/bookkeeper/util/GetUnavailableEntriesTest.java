@@ -1,5 +1,6 @@
 package org.apache.bookkeeper.util;
 
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -25,16 +26,18 @@ public class GetUnavailableEntriesTest {
 
         BitSet validBitSet = new BitSet((int) lastBookieEntry);
         long[] bookieEntries1 = {2L, 4L, 5L, 7L};
+        long[] bookieEntries2 = {5L, 7L, 9L}; // Caso per cui un SequenceGroup ha un sequencePeriod costante
 
         for (int i = 1; i < lastBookieEntry; i += 2) {
             validBitSet.set(i);
         }
 
         List<Long> unavailableEntries1 = Arrays.asList(1L, 3L);
-        //BitSet con valori impostati oltre il range [startEntryId, lastEntryId]
+        List<Long> unavailableEntries3 = Arrays.asList(1L, 3L, 5L);
+        // BitSet con valori impostati oltre il range [startEntryId, lastEntryId]
 
-        BitSet validBitsetButExceeding = new BitSet((int)lastBookieEntry+10);   // sono presenti tutte le entry
-        validBitsetButExceeding.flip(0, (int)lastBookieEntry+11);
+        BitSet validBitsetButExceeding = new BitSet((int) lastBookieEntry + 10);   // sono presenti tutte le entry
+        validBitsetButExceeding.flip(0, (int) lastBookieEntry + 11);
 
         BitSet bitSetWithoutMatchingValues = new BitSet(17);
         bitSetWithoutMatchingValues.flip(1, 2);
@@ -49,13 +52,26 @@ public class GetUnavailableEntriesTest {
         BitSet exceedingBitSet = new BitSet((int) lastBookieEntry + 10);
         exceedingBitSet.flip(0, (int) lastBookieEntry + 11);
 
+        BitSet bitSetAllFalse = new BitSet((int) lastBookieEntry); // New test case for all false
+        BitSet bitSetAllTrue = new BitSet((int) lastBookieEntry);  // New test case for all true
+        bitSetAllTrue.flip(0, (int) lastBookieEntry + 1);
+
+        List<Long> unavailableEntriesAllTrue = new ArrayList<>();
+        for (long i = 0; i <= lastBookieEntry; i++) {
+            if (!Arrays.asList(2L, 4L, 5L, 7L).contains(i)) {
+                unavailableEntriesAllTrue.add(i);
+            }
+        }
 
         return Arrays.asList(new Object[][]{
                 {0, lastBookieEntry, validBitSet, bookieEntries1, unavailableEntries1},
                 {lastBookieEntry, lastBookieEntry, bitSetWithoutMatchingValues, bookieEntries1, new ArrayList<>()},
                 {lastBookieEntry, lastBookieEntry + 1, null, bookieEntries1, exception},
                 {-1, lastBookieEntry, validBitsetButExceeding, bookieEntries1, unavailableEntries2},
-                {lastBookieEntry, lastBookieEntry-1, validBitSet, bookieEntries1, new ArrayList<>()}
+                {lastBookieEntry, lastBookieEntry - 1, validBitSet, bookieEntries1, new ArrayList<>()},
+
+                //caso aggiunto per migliorare la coverage della classe intera
+                {0, lastBookieEntry, validBitSet, bookieEntries2, unavailableEntries1}
         });
     }
 
@@ -105,4 +121,5 @@ public class GetUnavailableEntriesTest {
         List<Long> result = availabilityOfEntriesOfLedger.getUnavailableEntries(startEntry, lastEntry, availabilityOfEntries);
         assertTrue(result.isEmpty());
     }
+
 }
