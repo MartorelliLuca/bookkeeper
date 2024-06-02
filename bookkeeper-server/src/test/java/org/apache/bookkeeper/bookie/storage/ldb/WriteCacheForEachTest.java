@@ -10,10 +10,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-
 public class WriteCacheForEachTest {
 
-    private class NullConsumer implements WriteCache.EntryConsumer{
+    private class NullConsumer implements WriteCache.EntryConsumer {
         @Override
         public void accept(long ledgerId, long entryId, ByteBuf entry) throws IOException {
             throw new NullPointerException("Test Exception");
@@ -35,11 +34,10 @@ public class WriteCacheForEachTest {
         cache.forEach(null);
     }
 
-
     @Test(expected = NullPointerException.class)
     public void testForEachWithInvalidConsumerPopulatedCache() throws IOException {
         WriteCache cache = new WriteCache(ByteBufAllocator.DEFAULT, 1024);
-        NullConsumer consumer = new NullConsumer ();
+        NullConsumer consumer = new NullConsumer();
         ByteBuf entry = Unpooled.buffer();
         entry.writeBytes(new byte[]{1, 2, 3, 4});
         cache.put(1L, 1L, entry);
@@ -49,7 +47,7 @@ public class WriteCacheForEachTest {
     @Test
     public void testForEachWithInvalidConsumerEmptyCache() throws IOException {
         WriteCache cache = new WriteCache(ByteBufAllocator.DEFAULT, 1024);
-        NullConsumer consumer = new NullConsumer ();
+        NullConsumer consumer = new NullConsumer();
         cache.forEach(consumer);
     }
 
@@ -90,5 +88,25 @@ public class WriteCacheForEachTest {
         Assert.assertEquals("1:1", result.get(0));
     }
 
+    @Test
+    public void testForEachWithDeletedLedgers() throws IOException {
+        WriteCache cache = new WriteCache(ByteBufAllocator.DEFAULT, 1024);
+        List<String> result = new ArrayList<>();
+
+        WriteCache.EntryConsumer consumer = new WriteCache.EntryConsumer() {
+            @Override
+            public void accept(long ledgerId, long entryId, ByteBuf entry) throws IOException {
+                result.add(ledgerId + ":" + entryId);
+            }
+        };
+
+        ByteBuf entry = Unpooled.buffer();
+        entry.writeBytes(new byte[]{1, 2, 3, 4});
+        cache.put(1L, 1L, entry);
+        cache.deleteLedger(1L);  // Delete the ledger
+
+        cache.forEach(consumer);
+        Assert.assertTrue(result.isEmpty()); // Expecting no entries to be processed
+    }
 
 }

@@ -1,4 +1,3 @@
-/*
 package org.apache.bookkeeper.bookie.storage.ldb;
 
 import io.netty.buffer.ByteBuf;
@@ -80,4 +79,3 @@ public class GetWriteCacheTest {
     }
 
 }
-*/
