@@ -1,7 +1,6 @@
 /*
 package org.apache.bookkeeper.util;
 
-import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -28,13 +27,12 @@ public class GetUnavailableEntriesTest {
         BitSet validBitSet = new BitSet((int) lastBookieEntry);
         long[] bookieEntries1 = {2L, 4L, 5L, 7L};
         long[] bookieEntries2 = {5L, 7L, 9L}; // Caso per cui un SequenceGroup ha un sequencePeriod costante
-
+        BitSet emptyBitSet = new BitSet((int) lastBookieEntry);;
         for (int i = 1; i < lastBookieEntry; i += 2) {
             validBitSet.set(i);
         }
 
         List<Long> unavailableEntries1 = Arrays.asList(1L, 3L);
-        List<Long> unavailableEntries3 = Arrays.asList(1L, 3L, 5L);
         // BitSet con valori impostati oltre il range [startEntryId, lastEntryId]
 
         BitSet validBitsetButExceeding = new BitSet((int) lastBookieEntry + 10);   // sono presenti tutte le entry
@@ -60,18 +58,27 @@ public class GetUnavailableEntriesTest {
             }
         }
 
+        BitSet availabilityBitSet = new BitSet();
+        availabilityBitSet.set(0, 10, true);
+        List<Long> unavailableEntriesAll = new ArrayList<>();
+        for (long i = 0; i < 10; i++) {
+            unavailableEntriesAll.add(i);
+        }
+
         return Arrays.asList(new Object[][]{
                 {0, lastBookieEntry, validBitSet, bookieEntries1, unavailableEntries1},
                 {lastBookieEntry, lastBookieEntry, bitSetWithoutMatchingValues, bookieEntries1, new ArrayList<>()},
-                {lastBookieEntry, lastBookieEntry + 1, null, bookieEntries1, exception},
+                {0, lastBookieEntry, null, bookieEntries1, exception},
                 {-1, lastBookieEntry, validBitsetButExceeding, bookieEntries1, unavailableEntries2},
                 {lastBookieEntry, lastBookieEntry - 1, validBitSet, bookieEntries1, new ArrayList<>()},
 
-                //caso aggiunto per migliorare la coverage di AvailabilityOfEntriesOfLedger
-                {0, lastBookieEntry, validBitSet, bookieEntries2, unavailableEntries1}
+                //caso aggiunto per migliorare la coverage di AvailabilityOfEntriesOfLedger (EmptyBitSet e SequencePeriod)
+                {0, lastBookieEntry, validBitSet, bookieEntries2, unavailableEntries1},
+                {0, lastBookieEntry, emptyBitSet, bookieEntries2, new ArrayList<>()},
+                //caso aggiunto per testare che un AvailabilityOfEntriesOfLedger vuoto ritorni tutte le entry come non disponibili
+                {0, 9, availabilityBitSet, new long[]{}, unavailableEntriesAll}
         });
     }
-
 
     public GetUnavailableEntriesTest(long startEntryId, long lastEntryId, BitSet expectedEntries,
                                      long[] bookieEntries, List<Long> expectedResult) {
@@ -111,26 +118,5 @@ public class GetUnavailableEntriesTest {
 
         notClosedLedger.getUnavailableEntries(startEntry, lastEntry, bookieEntries);
     }
-
-    @Test
-    public void testEmptyBitSet() {
-        BitSet availabilityOfEntries = new BitSet();
-        List<Long> result = availabilityOfEntriesOfLedger.getUnavailableEntries(startEntry, lastEntry, availabilityOfEntries);
-        assertTrue(result.isEmpty());
-    }
-
-    @Test
-    public void testGetUnavailableEntriesWithNoSequenceGroup() {
-        AvailabilityOfEntriesOfLedger availability = new AvailabilityOfEntriesOfLedger(new long[]{});
-        BitSet availabilityBitSet = new BitSet();
-        availabilityBitSet.set(0, 10, true);  // tutti i bit sono impostati a true
-        List<Long> unavailableEntries = availability.getUnavailableEntries(0, 9, availabilityBitSet);
-        assertEquals(10, unavailableEntries.size());
-        for (long i = 0; i < 10; i++) {
-            assertTrue(unavailableEntries.contains(i));
-        }
-    }
-
-
 }
 */
