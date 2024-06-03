@@ -6,69 +6,67 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
-import java.nio.ByteBuffer;
-import java.security.SecureRandom;
 import java.util.*;
-import java.util.stream.LongStream;
 
 @RunWith(Parameterized.class)
 public class ConstructorLedgerTest {
 
-    private enum CONSTRUCTOR {
+    public enum CONSTRUCTOR {
         LongArray,
         Iterator,
-        ByteBuf,
-        ByteArray
+        ByteArray,
+        ByteBuf
     }
 
     private AvailabilityOfEntriesOfLedger availabilityOfEntriesOfLedger;
+    private PrimitiveIterator.OfLong entriesOfLongIterator;
     private long[] entriesOfLedger;
+    private byte[] serializedEntries;
     private ByteBuf byteBuf;
-    private boolean isExpectedException;
-    private CONSTRUCTOR typeOfConstructor;
+    private final boolean isExpectedException;
+    private final boolean isExpectedFailure;
+    private final CONSTRUCTOR typeOfConstructor;
 
     public ConstructorLedgerTest(
             long[] entriesOfLedger,
             CONSTRUCTOR typeOfConstructor,
-            boolean isExpectedException) {
+            boolean isExpectedException,
+            boolean isExpectedFailure) {
+
         this.entriesOfLedger = entriesOfLedger;
         this.typeOfConstructor = typeOfConstructor;
         this.isExpectedException = isExpectedException;
-        createEntriesOfLedger();
+        this.isExpectedFailure = isExpectedFailure;
+        initializeEntries();
     }
 
-    private void createEntriesOfLedger() {
+    private void initializeEntries() {
         switch (typeOfConstructor) {
             case LongArray:
-                availabilityOfEntriesOfLedger = new AvailabilityOfEntriesOfLedger(entriesOfLedger);
                 break;
             case Iterator:
-                LongStream longStream = Arrays.stream(entriesOfLedger);
-                PrimitiveIterator.OfLong iterator = longStream.iterator();
-                availabilityOfEntriesOfLedger = new AvailabilityOfEntriesOfLedger(iterator);
+                if (entriesOfLedger != null) {
+                    entriesOfLongIterator = Arrays.stream(entriesOfLedger).iterator();
+                } else {
+                    entriesOfLongIterator = null;
+                }
                 break;
             case ByteArray:
-                if (entriesOfLedger != null) { // Check if the array is null
-                    int totalLenght = 64 + entriesOfLedger.length * Long.BYTES;
-                    byte[] bytes = new byte[totalLenght];
-                    SecureRandom random = new SecureRandom();
-                    random.nextBytes(bytes);
-                    ByteBuffer byteBuffer = ByteBuffer.wrap(bytes, 64, this.entriesOfLedger.length * Long.BYTES);
-                    availabilityOfEntriesOfLedger = new AvailabilityOfEntriesOfLedger(byteBuffer.array());
+                if (entriesOfLedger != null) {
+                    availabilityOfEntriesOfLedger = new AvailabilityOfEntriesOfLedger(entriesOfLedger);
+                    serializedEntries = availabilityOfEntriesOfLedger.serializeStateOfEntriesOfLedger();
+                } else {
+                    serializedEntries = null;
                 }
                 break;
             case ByteBuf:
-                int totalLengthByteBuf = 64 + entriesOfLedger.length * Long.BYTES;
-                ByteBuf byteBuf = Unpooled.buffer(totalLengthByteBuf);
-                SecureRandom secureRandom = new SecureRandom();
-                byte[] randomBytesByteBuf = new byte[64];
-                secureRandom.nextBytes(randomBytesByteBuf);
-                byteBuf.writeBytes(randomBytesByteBuf);
-                for (long l : this.entriesOfLedger) {
-                    byteBuf.writeLong(l);
+                if (entriesOfLedger != null) {
+                    availabilityOfEntriesOfLedger = new AvailabilityOfEntriesOfLedger(entriesOfLedger);
+                    byteBuf = Unpooled.buffer();
+                    byteBuf.writeBytes(availabilityOfEntriesOfLedger.serializeStateOfEntriesOfLedger());
+                } else {
+                    byteBuf = null;
                 }
-                availabilityOfEntriesOfLedger = new AvailabilityOfEntriesOfLedger(byteBuf);
                 break;
         }
     }
@@ -77,37 +75,66 @@ public class ConstructorLedgerTest {
     public static Collection<Object[]> data() {
         long[] valid = new long[]{1L, 2L, 4L};
         long[] invalid = new long[]{-1L, 4L, 8L};
-        long[] empty = new long[5];
+        long[] empty = new long[3];
 
         return Arrays.asList(new Object[][] {
-                //{entriesOfLedger,     TYPE_OF_CONSTRUCTORS,           EXCEPTION}
-                {valid,                 CONSTRUCTOR.LongArray,          false},         //case 1
-                {invalid,               CONSTRUCTOR.LongArray,          true},          //case 2
-                {empty,                 CONSTRUCTOR.LongArray,          true},          //case 3
-/*                {null,                  CONSTRUCTOR.LongArray,          true},          //case 4*/
-                {valid,                 CONSTRUCTOR.Iterator,           false},         //case 5
-                {invalid,               CONSTRUCTOR.Iterator,           true},          //case 6
-                {empty,                 CONSTRUCTOR.Iterator,           true},          //case 7
-                /*{null,                  CONSTRUCTOR.Iterator,           true},          //case 8
-                {valid,                 CONSTRUCTOR.ByteArray,          true},          //case 9
-                {invalid,               CONSTRUCTOR.ByteArray,          true},          //case 10
-                {empty,                 CONSTRUCTOR.ByteArray,          true},          //case 11
-                {null,                  CONSTRUCTOR.ByteArray,          true},          //case 12
-                {valid,                 CONSTRUCTOR.ByteBuf,            false},         //case 13
-                {invalid,               CONSTRUCTOR.ByteBuf,            true},          //case 14
-                {empty,                 CONSTRUCTOR.ByteBuf,            true},          //case 15
-                {null,                  CONSTRUCTOR.ByteBuf,            true}           //case 16*/
+              //{entriesOfLedger,        TYPE_OF_CONSTRUCTORS,           EXCEPTION,      FAILURE}
+                {valid,                  CONSTRUCTOR.LongArray,          false,          false},
+                {invalid,                CONSTRUCTOR.LongArray,          true,           true},
+                {empty,                  CONSTRUCTOR.LongArray,          false,          false},
+                {null,                   CONSTRUCTOR.LongArray,          true,           false},
+                {valid,                  CONSTRUCTOR.Iterator,           false,          false},
+                {invalid,                CONSTRUCTOR.Iterator,           true,           true},
+                {empty,                  CONSTRUCTOR.Iterator,           false,          false},
+                {null,                   CONSTRUCTOR.Iterator,           true,           false},
+                {valid,                  CONSTRUCTOR.ByteArray,          false,          false},
+                {invalid,                CONSTRUCTOR.ByteArray,          true,           true},
+                {empty,                  CONSTRUCTOR.ByteArray,          false,          false},
+                {null,                   CONSTRUCTOR.ByteArray,          true,           false},
+                {valid,                  CONSTRUCTOR.ByteBuf,            false,          false},
+                {invalid,                CONSTRUCTOR.ByteBuf,            true,           true},
+                {empty,                  CONSTRUCTOR.ByteBuf,            false,          false},
+                {null,                   CONSTRUCTOR.ByteBuf,            true,           false},
+
+                {valid,                  CONSTRUCTOR.ByteArray,          true,           false}
         });
     }
 
     @Test
     public void constructorTest() {
         try {
-            Assert.assertNotNull(availabilityOfEntriesOfLedger);
-            Assert.assertEquals(count(entriesOfLedger), availabilityOfEntriesOfLedger.getTotalNumOfAvailableEntries());
+            switch (typeOfConstructor) {
+                case LongArray:
+                    availabilityOfEntriesOfLedger = new AvailabilityOfEntriesOfLedger(entriesOfLedger);
+                    break;
+                case Iterator:
+                    availabilityOfEntriesOfLedger = new AvailabilityOfEntriesOfLedger(entriesOfLongIterator);
+                    break;
+                case ByteArray:
+                    if (serializedEntries != null) {
+                        availabilityOfEntriesOfLedger = new AvailabilityOfEntriesOfLedger(serializedEntries);
+                    } else {
+                        throw new IllegalArgumentException("Serialized entries are null");
+                    }
+                    break;
+                case ByteBuf:
+                    if (byteBuf != null) {
+                        availabilityOfEntriesOfLedger = new AvailabilityOfEntriesOfLedger(byteBuf);
+                    } else {
+                        throw new IllegalArgumentException("ByteBuf is null");
+                    }
+                    break;
+            }
+
+            if (!isExpectedFailure) {
+                Assert.assertEquals(count(entriesOfLedger), availabilityOfEntriesOfLedger.getTotalNumOfAvailableEntries());
+            }
+
             for (long entry : entriesOfLedger) {
-                if (entry >= 0) {
+                if (entry >= 0 && !isExpectedFailure) {
                     Assert.assertTrue(availabilityOfEntriesOfLedger.isEntryAvailable(entry));
+                } else {
+                    Assert.assertTrue(isExpectedFailure);
                 }
             }
         } catch (Exception e) {
@@ -116,6 +143,9 @@ public class ConstructorLedgerTest {
     }
 
     private int count(long[] content) {
+        if (content == null) {
+            return 0;
+        }
         Set<Long> uniqueEntries = new HashSet<>();
         for (long entry : content) {
             if (entry >= 0) {

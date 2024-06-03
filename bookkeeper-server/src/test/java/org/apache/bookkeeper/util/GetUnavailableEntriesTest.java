@@ -1,4 +1,3 @@
-/*
 package org.apache.bookkeeper.util;
 
 import org.junit.Test;
@@ -119,4 +118,3 @@ public class GetUnavailableEntriesTest {
         notClosedLedger.getUnavailableEntries(startEntry, lastEntry, bookieEntries);
     }
 }
-*/

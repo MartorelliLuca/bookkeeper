@@ -1,4 +1,3 @@
-/*
 package org.apache.bookkeeper.util;
 
 import org.junit.Assert;
@@ -63,4 +62,3 @@ public class IsEntryAvailableTest {
         notClosedLedger.isEntryAvailable(2L);
     }
 }
-*/
