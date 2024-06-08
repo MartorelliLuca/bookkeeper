@@ -1,6 +1,6 @@
 package org.apache.bookkeeper.bookie.storage.ldb;
 
-import static org.junit.Assert.assertEquals;
+
 import static org.mockito.Mockito.verify;
 
 import java.io.IOException;
@@ -32,21 +32,15 @@ public class WriteCacheForEachMutationsTest {
         verify(lockMock).unlock();
     }
 
-    private WriteCache.EntryConsumer consumerMock = new WriteCache.EntryConsumer() {
+    private final WriteCache.EntryConsumer consumerMock = new WriteCache.EntryConsumer() {
         @Override
-        public void accept(long ledgerId, long entryId, ByteBuf entry) throws IOException {
+        public void accept(long ledgerId, long entryId, ByteBuf entry) {
             // Implementazione del mock di EntryConsumer per il test
         }
     };
 
-    // Metodi di utility per la reflection
 
-    private long getSegmentOffsetBits() throws NoSuchFieldException, IllegalAccessException {
-        Field field = WriteCache.class.getDeclaredField("segmentOffsetBits");
-        field.setAccessible(true);
-        return (long) field.get(writeCache);
-    }
-
+    // Metodo di utility per la reflection
     private void setSortedEntriesLock(WriteCache writeCache, ReentrantLock lock) throws NoSuchFieldException, IllegalAccessException {
         Field field = WriteCache.class.getDeclaredField("sortedEntriesLock");
         field.setAccessible(true);
