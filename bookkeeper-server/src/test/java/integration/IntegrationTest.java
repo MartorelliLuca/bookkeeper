@@ -273,6 +273,37 @@ public class IntegrationTest {
         lifecycleComponentStack.addLifecycleListener(listener);
     }
 
+    private void failSetUp2() throws Exception {
+        StatsLogger statsLogger = NullStatsLogger.INSTANCE; //It is a dummy stats logger originally present used for testing
+
+        BookieConfiguration conf = new BookieConfiguration(new ServerConfiguration());
+        DataIntegrityCheck check = mock(DataIntegrityCheck.class);  //The implementation require to instantiate a bookie
+        LifecycleComponent component1 = getLimitedDataIntegrityService(conf, statsLogger, check);
+        LifecycleComponent component2 = new StatsProviderService(conf);
+
+        LifecycleComponent component3 = new DataIntegrityService(conf, statsLogger, check) {
+            @Override
+            public int interval() {
+                return 500; //half second
+            }
+            @Override
+            public TimeUnit intervalUnit() {
+                return TimeUnit.MILLISECONDS;
+            }
+            @Override
+            public void doStop() {
+                close();
+            }
+        };
+
+        List<LifecycleComponent> components = Arrays.asList(component1, component2, component3);
+
+        lifecycleComponentStack = getLifecycleComponentStack(components);
+
+        listener = new LifecycleListenerTestImpl();
+        lifecycleComponentStack.addLifecycleListener(listener);
+    }
+
     @Test
     public void testLifecycle1() throws Exception {
         //This test tests the normal case when the lifecycle is respected
@@ -423,38 +454,15 @@ public class IntegrationTest {
     @Test
     public void testLifecycle6() throws Exception {
         //This test try to stop initialized components, so the components don't do anything.
-
         validSetUp();
 
         lifecycleComponentStack.stop();
 
-        //Verifying if all the listener operation (before and after each operation in each component) have been executed.
         Assert.assertEquals("", listener.getLog());
     }
 
     @Test
     public void testLifecycle7() throws Exception {
-        //This test try to start closed components
-
-        validSetUp();
-
-        lifecycleComponentStack.close();
-        boolean condition = false;
-        try {
-            lifecycleComponentStack.start();
-        } catch (IllegalStateException e) {
-            condition = true;
-        }
-        Assert.assertTrue(condition);
-
-        Assert.assertEquals("This is the method beforeClose\n" +
-                "This is the method afterClose\n" +
-                "This is the method beforeClose\n" +
-                "This is the method afterClose\n", listener.getLog());
-    }
-
-    @Test
-    public void testLifecycle8() throws Exception {
         //This test cover the remained cases
 
         validSetUp();
@@ -486,6 +494,45 @@ public class IntegrationTest {
                         "This is the method afterClose\n" +
                         "This is the method beforeClose\n" +
                         "This is the method afterClose\n"
+                , listener.getLog());
+
+    }
+
+    @Test
+    public void testLifecycle8() throws Exception {
+        //This test cover the case in which one of the component is going to have a bad behaviour. One of the component, instead to go
+        // in the STOPPED state, goes in the CLOSED state. Hence, when the stack asks to restart, there will be a failure.
+
+        failSetUp2();
+
+        lifecycleComponentStack.start();
+
+        lifecycleComponentStack.stop();
+
+        try {
+            lifecycleComponentStack.start();
+        } catch (Exception e) {
+            //Exception caught
+        }
+
+        Assert.assertEquals("This is the method beforeStart\n" +
+                        "This is the method afterStart\n" +
+                        "This is the method beforeStart\n" +
+                        "This is the method afterStart\n" +
+                        "This is the method beforeStart\n" +
+                        "This is the method afterStart\n" +
+                        "This is the method beforeStop\n" +
+                        "This is the method beforeClose\n" +
+                        "This is the method afterClose\n" +
+                        "This is the method afterStop\n" +
+                        "This is the method beforeStop\n" +
+                        "This is the method afterStop\n" +
+                        "This is the method beforeStop\n" +
+                        "This is the method afterStop\n" +
+                        "This is the method beforeStart\n" +
+                        "This is the method afterStart\n" +
+                        "This is the method beforeStart\n" +
+                        "This is the method afterStart\n"
                 , listener.getLog());
 
     }
