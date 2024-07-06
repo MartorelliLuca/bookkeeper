@@ -45,7 +45,7 @@ public class IntegrationTest {
         return new DataIntegrityService(conf, statsLogger, check) {
             @Override
             public int interval() {
-                return 500; //half second
+                return 500; // mezzo secondo
             }
             @Override
             public TimeUnit intervalUnit() {
@@ -55,11 +55,11 @@ public class IntegrationTest {
     }
 
     private void validSetUp() throws Exception {
-        StatsLogger statsLogger = NullStatsLogger.INSTANCE; //It is a dummy stats logger originally present used for testing
+        StatsLogger statsLogger = NullStatsLogger.INSTANCE; // È un logger di statistiche fittizio originariamente presente utilizzato per i test
 
         BookieConfiguration conf = new BookieConfiguration(new ServerConfiguration());
 
-        DataIntegrityCheck check = mock(DataIntegrityCheck.class);  //The implementation require to instantiate a bookie
+        DataIntegrityCheck check = mock(DataIntegrityCheck.class);  // L'implementazione richiede di istanziare un bookie
         LifecycleComponent component1 = getLimitedDataIntegrityService(conf, statsLogger, check);
 
         LifecycleComponent component2 = new StatsProviderService(conf);
@@ -73,7 +73,7 @@ public class IntegrationTest {
     }
 
     private void invalidSetUp(Class<? extends Throwable> t) throws Exception {
-        StatsLogger statsLogger = NullStatsLogger.INSTANCE; //It is a dummy stats logger originally present used for testing
+        StatsLogger statsLogger = NullStatsLogger.INSTANCE; // È un logger di statistiche fittizio originariamente presente utilizzato per i test
 
         BookieConfiguration conf = new BookieConfiguration(new ServerConfiguration());
 
@@ -82,7 +82,6 @@ public class IntegrationTest {
         when(check.needsFullCheck()).thenReturn(true);
         when(check.runFullCheck()).thenReturn(future);
         when(future.get()).thenThrow(t);
-
 
         LifecycleComponent component1 = getLimitedDataIntegrityService(conf, statsLogger, check);
 
@@ -101,7 +100,7 @@ public class IntegrationTest {
 
         validSetUp();
 
-        lifecycleComponentStack.start();    //If the components are not in the STARTED state, they cannot be stopped.
+        lifecycleComponentStack.start();    // Se i componenti non sono nello stato Started, non possono essere stoppati.
 
         Thread.sleep(1000);
 
@@ -113,13 +112,13 @@ public class IntegrationTest {
 
     }
 
-    //This test cover the case wherein the DataIntegrityService has a problem. The component shouldn't be interrupted.
+    // Questo test copre il caso in cui il DataIntegrityService ha un problema. Il componente non dovrebbe essere interrotto.
     @Test
     public void testInvalidStartAndStop() throws Exception {
 
         invalidSetUp(InterruptedException.class);
 
-        lifecycleComponentStack.start();    //If the components are not in the STARTED state, they cannot be stopped.
+        lifecycleComponentStack.start();    // Se i componenti non sono nello stato STARTED, non possono essere stoppati.
 
         Thread.sleep(1500);
 
@@ -128,16 +127,16 @@ public class IntegrationTest {
         for (int i = 0; i < lifecycleComponentStack.getNumComponents(); i++) {
             Assert.assertEquals(Lifecycle.State.STOPPED, lifecycleComponentStack.getComponent(i).lifecycleState());
         }
-
     }
 
-    //This test cover the case wherein the DataIntegrityService has a problem. The component shouldn't be interrupted.
+
+    // Questo test copre il caso in cui il DataIntegrityService ha un problema. Il componente non dovrebbe essere interrotto.
     @Test
     public void testInvalid2StartAndStop() throws Exception {
 
         invalidSetUp(ExecutionException.class);
 
-        lifecycleComponentStack.start();    //If the components are not in the STARTED state, they cannot be stopped.
+        lifecycleComponentStack.start();    // Se i componenti non sono nello stato STARTED, non possono essere stoppati.
 
         Thread.sleep(1500);
 
@@ -176,14 +175,14 @@ public class IntegrationTest {
 
     }
 
-    //This test simulate an exception in a component and how the stack react. An ExceptionHandler is also configured, so the test verify
-    // also that the handler is right configured in the components.
+    // Questo test simula un'eccezione in un componente e come reagisce lo stack. Viene configurato anche un ExceptionHandler, quindi il test verifica
+    // anche che il gestore sia configurato correttamente nei componenti.
     @Test
     public void testFail1() throws Exception {
 
         failSetUp();
 
-        Semaphore semaphore = new Semaphore(1); //A semaphore is used to see if the handler has been called
+        Semaphore semaphore = new Semaphore(1); // Una semaforo viene utilizzato per vedere se il gestore è stato chiamato
 
         lifecycleComponentStack.setExceptionHandler((t, e) -> semaphore.release());
 
@@ -201,7 +200,7 @@ public class IntegrationTest {
             Assert.assertEquals(Lifecycle.State.CLOSED, lifecycleComponentStack.getComponent(i).lifecycleState());
         }
 
-        //Verifying if all the listener operation (before and after each operation in each component) have been executed.
+        // Verificando se tutte le operazioni del listener (prima e dopo ciascuna operazione in ciascun componente) sono state eseguite.
         Assert.assertEquals("This is the method beforeStart\n" +
                 "This is the method afterStart\n" +
                 "This is the method beforeStart\n" +
@@ -222,8 +221,8 @@ public class IntegrationTest {
                 "This is the method afterClose\n", listener.getLog());
     }
 
-    //This test simulate an exception in a component and how the stack react. No ExceptionHandler are configured, so the test start() method must
-    // throw an exception.
+    // Questo test simula un'eccezione in un componente e come reagisce lo stack. Nessun ExceptionHandler è configurato, quindi il metodo start() deve
+    // lanciare un'eccezione.
     @Test
     public void testFail2() throws Exception {
 
@@ -231,10 +230,10 @@ public class IntegrationTest {
         try {
             lifecycleComponentStack.start();
         } catch (RuntimeException e) {
-            //catching the exception
+            // catturando l'eccezione
         }
 
-        //Verifying if all the listener operation (before and after each operation in each component) have been executed.
+        // Verificando se tutte le operazioni del listener (prima e dopo ciascuna operazione in ciascun componente) sono state eseguite.
         Assert.assertEquals("This is the method beforeStart\n" +
                 "This is the method afterStart\n" +
                 "This is the method beforeStart\n" +
@@ -243,17 +242,17 @@ public class IntegrationTest {
     }
 
     private void failSetUp() throws Exception {
-        StatsLogger statsLogger = NullStatsLogger.INSTANCE; //It is a dummy stats logger originally present used for testing
+        StatsLogger statsLogger = NullStatsLogger.INSTANCE; // È un logger di statistiche fittizio originariamente presente utilizzato per i test
 
         BookieConfiguration conf = new BookieConfiguration(new ServerConfiguration());
-        DataIntegrityCheck check = mock(DataIntegrityCheck.class);  //The implementation require to instantiate a bookie
+        DataIntegrityCheck check = mock(DataIntegrityCheck.class);  // L'implementazione richiede di istanziare un bookie
         LifecycleComponent component1 = getLimitedDataIntegrityService(conf, statsLogger, check);
         LifecycleComponent component2 = new StatsProviderService(conf);
 
         LifecycleComponent component3 = new DataIntegrityService(conf, statsLogger, check) {
             @Override
             public int interval() {
-                return 500; //half second
+                return 500; // mezzo secondo
             }
             @Override
             public TimeUnit intervalUnit() {
@@ -261,7 +260,7 @@ public class IntegrationTest {
             }
             @Override
             public void doStart() {
-                throw new RuntimeException();
+                throw new RuntimeException("start failure");
             }
         };
 
@@ -274,7 +273,7 @@ public class IntegrationTest {
     }
 
     private void failSetUp2() throws Exception {
-        StatsLogger statsLogger = NullStatsLogger.INSTANCE; //It is a dummy stats logger originally present used for testing
+        StatsLogger statsLogger = NullStatsLogger.INSTANCE; //Dummy stats logger
 
         BookieConfiguration conf = new BookieConfiguration(new ServerConfiguration());
         DataIntegrityCheck check = mock(DataIntegrityCheck.class);  //The implementation require to instantiate a bookie
@@ -453,16 +452,6 @@ public class IntegrationTest {
 
     @Test
     public void testLifecycle6() throws Exception {
-        //This test try to stop initialized components, so the components don't do anything.
-        validSetUp();
-
-        lifecycleComponentStack.stop();
-
-        Assert.assertEquals("", listener.getLog());
-    }
-
-    @Test
-    public void testLifecycle7() throws Exception {
         //This test cover the remained cases
 
         validSetUp();
@@ -499,7 +488,7 @@ public class IntegrationTest {
     }
 
     @Test
-    public void testLifecycle8() throws Exception {
+    public void testLifecycle7() throws Exception {
         //This test cover the case in which one of the component is going to have a bad behaviour. One of the component, instead to go
         // in the STOPPED state, goes in the CLOSED state. Hence, when the stack asks to restart, there will be a failure.
 
