@@ -109,4 +109,70 @@ public class WriteCacheForEachTest {
         Assert.assertTrue(result.isEmpty()); // Expecting no entries to be processed
     }
 
+    // Nuovi test aggiunti:
+
+    @Test(expected = NullPointerException.class)
+    public void testForEachWithNullConsumerOneElementInCache() throws IOException {
+        WriteCache cache = new WriteCache(ByteBufAllocator.DEFAULT, 1024);
+        ByteBuf entry = Unpooled.buffer();
+        entry.writeBytes(new byte[]{1, 2, 3, 4});
+        cache.put(1L, 1L, entry);
+        cache.forEach(null);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testForEachWithNullConsumerHalfFullCache() throws IOException {
+        WriteCache cache = new WriteCache(ByteBufAllocator.DEFAULT, 1024);
+        for (int i = 0; i < 512; i++) {
+            ByteBuf entry = Unpooled.buffer();
+            entry.writeBytes(new byte[]{1, 2, 3, 4});
+            cache.put(i, i, entry);
+        }
+        cache.forEach(null);
+    }
+
+    @Test
+    public void testForEachWithValidConsumerOneElementInCache() throws IOException {
+        WriteCache cache = new WriteCache(ByteBufAllocator.DEFAULT, 1024);
+        List<String> result = new ArrayList<>();
+
+        WriteCache.EntryConsumer consumer = new WriteCache.EntryConsumer() {
+            @Override
+            public void accept(long ledgerId, long entryId, ByteBuf entry) throws IOException {
+                result.add(ledgerId + ":" + entryId);
+            }
+        };
+        ByteBuf entry = Unpooled.buffer();
+        entry.writeBytes(new byte[]{1, 2, 3, 4});
+        cache.put(1L, 1L, entry);
+
+        cache.forEach(consumer);
+
+        Assert.assertEquals(1, result.size());
+        Assert.assertEquals("1:1", result.get(0));
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testForEachWithInvalidConsumerOneElementInCache() throws IOException {
+        WriteCache cache = new WriteCache(ByteBufAllocator.DEFAULT, 1024);
+        NullConsumer consumer = new NullConsumer();
+        ByteBuf entry = Unpooled.buffer();
+        entry.writeBytes(new byte[]{1, 2, 3, 4});
+        cache.put(1L, 1L, entry);
+        cache.forEach(consumer);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testForEachWithInvalidConsumerHalfFullCache() throws IOException {
+        WriteCache cache = new WriteCache(ByteBufAllocator.DEFAULT, 1024);
+        NullConsumer consumer = new NullConsumer();
+
+        for (int i = 0; i < 512; i++) {
+            ByteBuf entry = Unpooled.buffer();
+            entry.writeBytes(new byte[]{1, 2, 3, 4});
+            cache.put(i, i, entry);
+        }
+
+        cache.forEach(consumer);
+    }
 }
