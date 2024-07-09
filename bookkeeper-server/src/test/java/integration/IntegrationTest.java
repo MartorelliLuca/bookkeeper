@@ -102,8 +102,6 @@ public class IntegrationTest {
 
         lifecycleComponentStack.start();    // Se i componenti non sono nello stato Started, non possono essere stoppati.
 
-        Thread.sleep(1000);
-
         lifecycleComponentStack.stop();
 
         for (int i = 0; i < lifecycleComponentStack.getNumComponents(); i++) {
@@ -120,8 +118,6 @@ public class IntegrationTest {
 
         lifecycleComponentStack.start();    // Se i componenti non sono nello stato STARTED, non possono essere stoppati.
 
-        Thread.sleep(1500);
-
         lifecycleComponentStack.stop();
 
         for (int i = 0; i < lifecycleComponentStack.getNumComponents(); i++) {
@@ -137,8 +133,6 @@ public class IntegrationTest {
         invalidSetUp(ExecutionException.class);
 
         lifecycleComponentStack.start();    // Se i componenti non sono nello stato STARTED, non possono essere stoppati.
-
-        Thread.sleep(1500);
 
         lifecycleComponentStack.stop();
 
