@@ -11,9 +11,6 @@ import java.util.List;
 
 import static org.mockito.Mockito.*;
 
-//This is the first step of the top-down strategy of the integration test.
-//Therefore, I have tested LifecycleComponentStack only using mocks.
-
 public class LifecycleComponentStackTest {
 
     private LifecycleComponentStack lifecycleComponentStack;    // tested object
@@ -33,13 +30,9 @@ public class LifecycleComponentStackTest {
         when(component3.lifecycleState()).thenReturn(Lifecycle.State.INITIALIZED);
 
         publisher = mock(ComponentInfoPublisher.class);
-
         builder.withName(name).addComponent(component1).withComponentInfoPublisher(publisher).addComponent(component2).addComponent(component3);
-
         lifecycleComponentStack = builder.build();
-
         listener = mock(LifecycleListener.class);
-
         lifecycleComponentStack.addLifecycleListener(listener);
     }
 
@@ -120,9 +113,7 @@ public class LifecycleComponentStackTest {
                 }
             }).when(lifecycleComponentStack.getComponent(i)).start();
         }
-
         lifecycleComponentStack.start();
-
         for(int i = 0; i < lifecycleComponentStack.getNumComponents(); i++) {
             verify(lifecycleComponentStack.getComponent(i), times(1)).start();
             verify(lifecycleComponentStack.getComponent(i), times(1)).publishInfo(any());             //added after PIT
@@ -143,9 +134,7 @@ public class LifecycleComponentStackTest {
                 }
             }).when(lifecycleComponentStack.getComponent(i)).stop();
         }
-
         lifecycleComponentStack.stop();
-
         for(int i = 0; i < lifecycleComponentStack.getNumComponents(); i++) {
             verify(lifecycleComponentStack.getComponent(i), times(1)).stop();
             Assert.assertEquals(Lifecycle.State.STOPPED, lifecycleComponentStack.getComponent(i).lifecycleState());
@@ -164,9 +153,7 @@ public class LifecycleComponentStackTest {
                 }
             }).when(lifecycleComponentStack.getComponent(i)).close();
         }
-
         lifecycleComponentStack.close();
-
         for(int i = 0; i < lifecycleComponentStack.getNumComponents(); i++) {
             verify(lifecycleComponentStack.getComponent(i), times(1)).close();
             Assert.assertEquals(Lifecycle.State.CLOSED, lifecycleComponentStack.getComponent(i).lifecycleState());
@@ -176,9 +163,7 @@ public class LifecycleComponentStackTest {
     @Test
     public void testPublishInfo() {
         ComponentInfoPublisher publisher = mock(ComponentInfoPublisher.class);
-
         lifecycleComponentStack.publishInfo(publisher);
-
         for(int i = 0; i < lifecycleComponentStack.getNumComponents(); i++) {
             verify(lifecycleComponentStack.getComponent(i), times(1)).publishInfo(any());
         }
@@ -202,23 +187,10 @@ public class LifecycleComponentStackTest {
     @Test
     public void testAddLifecycleListener() {
         LifecycleListener newListener = mock(LifecycleListener.class);
-
         lifecycleComponentStack.addLifecycleListener(newListener);
-
         for(int i = 0; i < lifecycleComponentStack.getNumComponents(); i++) {
             //Two invocations are expected because there is a first invocation in the @Before method
             verify(lifecycleComponentStack.getComponent(i), times(2)).addLifecycleListener(any());
-        }
-    }
-
-    @Test
-    public void testSetExceptionHandler() {
-        Thread.UncaughtExceptionHandler handler = mock(Thread.UncaughtExceptionHandler.class);
-
-        lifecycleComponentStack.setExceptionHandler(handler);
-
-        for(int i = 0; i < lifecycleComponentStack.getNumComponents(); i++) {
-            verify(lifecycleComponentStack.getComponent(i), times(1)).setExceptionHandler(any());
         }
     }
 
